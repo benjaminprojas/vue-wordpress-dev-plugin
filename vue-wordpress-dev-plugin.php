@@ -92,7 +92,7 @@ function wpVueRenderColumn( $columnName, $postId ) {
 		$data = json_decode( str_replace( 'var wpVue = ', '', substr( $data, 0, -1 ) ), true );
 	}
 
-	$nonce   = wp_create_nonce( "wp_vue_meta_{$postId}" );
+	$nonce = wp_create_nonce( "wp_vue_meta_{$postId}" );
 
 	$data['posts'][] = [
 		'id'         => $postId,
