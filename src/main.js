@@ -1,14 +1,20 @@
 import Vue from 'vue'
 import App from './App.vue'
-import router from './router'
-import store from './store'
+
+import '@/plugins'
 
 Vue.config.productionTip = false
 
 document.addEventListener('DOMContentLoaded', () => {
-	new Vue({
-		router,
-		store,
-		render : h => h(App)
-	}).$mount('#app')
+	if (window.wpVue.posts) {
+		window.wpVue.posts.forEach(post => {
+			new Vue({
+				render : h => h(App, {
+					props : {
+						post
+					}
+				})
+			}).$mount(`#${post.columnName}-${post.id}`)
+		})
+	}
 })
