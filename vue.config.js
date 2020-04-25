@@ -6,7 +6,6 @@ module.exports = {
 	outputDir        : 'dist',
 	configureWebpack : {
 		devServer : {
-			contentBase  : '/wp-content/plugins/vue-wordpress-dev-plugin/dist/',
 			allowedHosts : [ 'wp-vue.local' ],
 			headers      : {
 				'Access-Control-Allow-Origin'  : '*',
