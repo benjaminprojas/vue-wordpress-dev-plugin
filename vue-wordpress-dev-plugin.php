@@ -35,6 +35,7 @@ function wpVuePage() {
 function wpVueHook() {
 	$connection = @fsockopen( 'localhost', '8080' );
 
+	/*
 	// Scripts.
 	wp_enqueue_script(
 		'wp-vue-script-app',
@@ -74,4 +75,5 @@ function wpVueHook() {
 		'0.0.1',
 		'all'
 	);
+	*/
 }
