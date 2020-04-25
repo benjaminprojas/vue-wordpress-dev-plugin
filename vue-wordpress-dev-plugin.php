@@ -16,21 +16,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action( 'admin_head', 'wpVueEnqueuePostsScripts' );
 
 function wpVueEnqueuePostsScripts() {
+	$connection = @fsockopen( 'localhost', '8080' );
+
 	// Scripts.
 	wp_enqueue_script(
 		'wp-vue-script-app',
 		$connection
 			? 'http://localhost:8080/js/app.js'
 			: plugins_url( 'dist/js/app.js', __FILE__ ),
-		[], // No dependencies.
-		'0.0.1',
-		false
-	);
-	wp_enqueue_script(
-		'wp-vue-script-about',
-		$connection
-			? 'http://localhost:8080/js/about.js'
-			: plugins_url( 'dist/js/about.js', __FILE__ ),
 		[], // No dependencies.
 		'0.0.1',
 		false
@@ -111,24 +104,24 @@ function wpVueRenderColumn( $columnName, $postId ) {
 	$wp_scripts->add_data( 'wp-vue-script-app', 'data', '' );
 	wp_localize_script( 'wp-vue-script-app', 'wpVue', $data );
 
-	echo '<div id="<?php echo $columnName; ?>-<?php echo $postId; ?>"></div>';
+	echo '<div id="' . $columnName . '-' . $postId . '"></div>';
 }
 
 add_action( 'wp_ajax_wp_vue_ajax_save_post_meta', 'wpVueSavePostMeta' );
 
 function wpVueSavePostMeta() {
-	if ( ! current_user_can( 'edit_post', $postId ) ) {
-		wp_send_json_error();
-	}
-
 	$body   = json_decode( file_get_contents( 'php://input' ) );
 	$postId = ! empty( $body->postId ) ? intval( $body->postId ) : null;
 	$value  = ! empty( $body->value ) ? sanitize_text_field( $body->value ) : null;
 	$nonce  = ! empty( $body->_ajax_nonce ) ? $body->_ajax_nonce : null;
 
+	if ( ! current_user_can( 'edit_post', $postId ) ) {
+		wp_send_json_error( 'no here' );
+	}
+
 	$result = wp_verify_nonce( $nonce, "wp_vue_meta_{$postId}" );
 	if ( empty( $result ) ) {
-		wp_send_json_error();
+		wp_send_json_error( 'here' );
 	}
 
 	update_post_meta( $postId, '_wp_vue_test', $value );
