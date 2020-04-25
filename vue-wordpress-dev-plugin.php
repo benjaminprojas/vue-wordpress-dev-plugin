@@ -13,65 +13,97 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-add_action( 'admin_menu', 'wpVueAddMenu' );
+add_action( 'admin_head', 'wpVueEnqueuePostsScripts' );
 
-function wpVueAddMenu() {
-	$hook = add_menu_page(
-		'WordPress Vue Dev',
-		'WP Vue Dev',
-		'edit_plugins',
-		'wpvue',
-		'wpVuePage',
-		'dashicons-carrot'
-	);
-
-	add_action( "load-$hook", 'wpVueHook' );
-}
-
-function wpVuePage() {
-	echo '<div id="app">Hello Everyone!</div>';
-}
-
-function wpVueHook() {
-	$connection = @fsockopen( 'localhost', '8080' );
-
+function wpVueEnqueuePostsScripts() {
 	// Scripts.
-	wp_enqueue_script(
-		'wp-vue-script-app',
-		$connection
-			? 'http://localhost:8080/js/app.js'
-			: plugins_url( 'dist/js/app.js', __FILE__ ),
-		[], // No dependencies.
-		'0.0.1',
-		false
+	aioseo()->helpers->enqueueScript(
+		'aioseo-posts-table',
+		'js/posts-table.js'
 	);
-	wp_enqueue_script(
-		'wp-vue-script-about',
-		$connection
-			? 'http://localhost:8080/js/about.js'
-			: plugins_url( 'dist/js/about.js', __FILE__ ),
-		[], // No dependencies.
-		'0.0.1',
-		false
+	aioseo()->helpers->enqueueScript(
+		'aioseo-posts-table-vendors',
+		'js/chunk-posts-table-vendors.js'
 	);
-	wp_enqueue_script(
-		'wp-vue-script-chunk-vendors',
-		$connection
-			? 'http://localhost:8080/js/chunk-vendors.js'
-			: plugins_url( 'dist/js/chunk-vendors.js', __FILE__ ),
-		[], // No dependencies.
-		'0.0.1',
-		false
+	aioseo()->helpers->enqueueScript(
+		'aioseo-common',
+		'js/chunk-common.js'
+	);
+	wp_localize_script(
+		'aioseo-posts-table',
+		'aioseo',
+		[
+			'restUrl'      => rest_url(),
+			'imgUrl'       => AIOSEOP_PLUGIN_IMAGES_URL, // @TODO: Maybe move this directory?
+			'posts'        => [],
+			'translations' => aioseo()->helpers->getJedLocaleData( 'all-in-one-seo-pack' ),
+			'publicPath'   => AIOSEOP_PLUGIN_URL,
+			'options'      => aioseo()->options->all(),
+			'settings'     => aioseo()->settings->all(),
+			'nonce'        => wp_create_nonce( 'wp_rest' )
+		]
 	);
 
 	// Styles.
-	wp_enqueue_style(
-		'wp-vue-style',
-		$connection
-			? 'http://localhost:8080/css/app.css'
-			: plugins_url( 'dist/css/app.css', __FILE__ ),
-		[], // No dependencies.
-		'0.0.1',
-		'all'
+	aioseo()->helpers->enqueueStyle(
+		'aioseo-common',
+		'css/chunk-common.css'
 	);
+	aioseo()->helpers->enqueueStyle(
+		'aioseo-posts-table-style',
+		'css/posts-table.css'
+	);
+}
+
+add_action( 'admin_init', 'wpVueAddPostColumn', 1 );
+
+function wpVueAddPostColumn() {
+	add_filter( 'manage_posts_columns', 'wpVuePostColumn' );
+	add_action( 'manage_posts_custom_column', 'wpVueRenderColumn', 10, 2 );
+}
+
+function wpVuePostColumn( $columns ) {
+	$columns['wp-vue-test'] = 'Test Column';
+
+	return $columns;
+}
+
+function wpVueRenderColumn( $columnName, $postId ) {
+	$value = '';
+	if ( ! current_user_can( 'edit_post', $postId ) ) {
+		return;
+	}
+
+	$postType = get_post_type( $postId );
+
+	if ( 'wp-vue-test' !== $columnName ) {
+		return;
+	}
+
+	$value = get_post_meta( $postId, '_wp_vue_test', true );
+
+	// Add this column/post to the localized array.
+	global $wp_scripts;
+
+	$data = $wp_scripts->get_data( 'aioseo-posts-table', 'data' );
+
+	if ( ! is_array( $data ) ) {
+		$data = json_decode( str_replace( 'var aioseo = ', '', substr( $data, 0, -1 ) ), true );
+	}
+
+	$nonce   = wp_create_nonce( "aioseo_meta_{$columnName}_{$postId}" );
+	$posts   = $data['posts'];
+	$posts[] = [
+		'id'         => $postId,
+		'columnName' => $columnName,
+		'nonce'      => $nonce,
+		'value'      => $value
+	];
+
+	$data['posts'] = $posts;
+
+	$wp_scripts->add_data( 'aioseo-posts-table', 'data', '' );
+	wp_localize_script( 'aioseo-posts-table', 'aioseo', $data );
+
+	require( AIOSEOP_PLUGIN_DIR . 'app/Views/admin/posts/columns.php' );
 }
