@@ -39,7 +39,7 @@ function wpVueHook() {
 	wp_enqueue_script(
 		'wp-vue-script-app',
 		$connection
-			? 'http://localhost:8080/js/app.js'
+			? 'https://wp-vue.local:8080/js/app.js'
 			: plugins_url( 'dist/js/app.js', __FILE__ ),
 		[], // No dependencies.
 		'0.0.1',
@@ -48,7 +48,7 @@ function wpVueHook() {
 	wp_enqueue_script(
 		'wp-vue-script-about',
 		$connection
-			? 'http://localhost:8080/js/about.js'
+			? 'https://wp-vue.local:8080/js/about.js'
 			: plugins_url( 'dist/js/about.js', __FILE__ ),
 		[], // No dependencies.
 		'0.0.1',
@@ -57,7 +57,7 @@ function wpVueHook() {
 	wp_enqueue_script(
 		'wp-vue-script-chunk-vendors',
 		$connection
-			? 'http://localhost:8080/js/chunk-vendors.js'
+			? 'https://wp-vue.local:8080/js/chunk-vendors.js'
 			: plugins_url( 'dist/js/chunk-vendors.js', __FILE__ ),
 		[], // No dependencies.
 		'0.0.1',
@@ -68,7 +68,7 @@ function wpVueHook() {
 	wp_enqueue_style(
 		'wp-vue-style',
 		$connection
-			? 'http://localhost:8080/css/app.css'
+			? 'https://wp-vue.local:8080/css/app.css'
 			: plugins_url( 'dist/css/app.css', __FILE__ ),
 		[], // No dependencies.
 		'0.0.1',
